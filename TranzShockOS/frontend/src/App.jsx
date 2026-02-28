@@ -28,6 +28,7 @@ function App() {
 
   return (
     <div className="tranzshock-container">
+      {/* ===== HEADER ===== */}
       <div className="header">
         <div className="title">
           <span className="glitch">TRANZ SHOCK</span> OS v3.0
@@ -36,19 +37,14 @@ function App() {
           <span className="status-value active">MAPA ACTIVO</span>
         </div>
       </div>
-      
+
+      {/* ===== CONTENEDOR DEL JUEGO ===== */}
       <div 
         ref={gameContainerRef} 
         className="game-container"
-        style={{
-          border: '2px solid #3a5f3a',
-          margin: '20px 0',
-          boxShadow: '0 0 20px rgba(0, 255, 0, 0.2)',
-          backgroundColor: '#0f130f',
-          minHeight: '600px'
-        }}
       />
-      
+
+      {/* ===== SYSTEM LOG ===== */}
       <div className="system-log">
         <div className="log-entry">[MAPA: 25x18]</div>
         <div className="log-entry">[AGENTES: 2 ACTIVOS]</div>
@@ -61,3 +57,4 @@ function App() {
 }
 
 export default App;
+
