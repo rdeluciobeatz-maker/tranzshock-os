@@ -15,3 +15,7 @@ export const initGame = (parentElement) => {
   
   return new Phaser.Game(config);
 };
+// Después de new Phaser.Game(config)
+game.events.on('ready', () => {
+  console.log("🎮 Juego listo, dimensiones:", game.scale.width, game.scale.height);
+});
