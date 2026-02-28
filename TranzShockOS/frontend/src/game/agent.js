@@ -43,31 +43,26 @@ export class Agent {
   draw() {
     this.sprite.clear();
     
-    // Color base (más brillante si está seleccionado)
     const brightness = this.isSelected ? 1.2 : 1;
     this.sprite.fillStyle(Phaser.Display.Color.ValueToColor(this.color).darken(-brightness).color, 1);
     
-    // Cuerpo principal
     this.sprite.fillRect(this.x - 12, this.y - 12, 24, 24);
     
-    // Ojos
     this.sprite.fillStyle(0xffffff, 1);
     this.sprite.fillRect(this.x - 6, this.y - 6, 4, 4);
     this.sprite.fillRect(this.x + 2, this.y - 6, 4, 4);
     
-    // Borde (más grueso si está seleccionado)
     const borderWidth = this.isSelected ? 4 : 2;
     this.sprite.lineStyle(borderWidth, 0x7fff7f, 1);
     this.sprite.strokeRect(this.x - 12, this.y - 12, 24, 24);
     
-    // Indicador de energía
     this.sprite.fillStyle(0x7fff7f, 1);
     this.sprite.fillRect(this.x + 10, this.y - 10, 4, 4);
   }
   
   setSelected(selected) {
     this.isSelected = selected;
-    this.draw(); // Redibujar con nuevo estilo
+    this.draw();
   }
   
   moveTo(tileX, tileY) {
