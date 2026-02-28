@@ -7,12 +7,19 @@ function App() {
   const gameContainerRef = useRef(null);
 
   useEffect(() => {
-    if (!gameRef.current && gameContainerRef.current) {
-      gameRef.current = initGame(gameContainerRef.current);
-    }
+    // Pequeño retraso para asegurar que el DOM está listo
+    const timer = setTimeout(() => {
+      if (!gameRef.current && gameContainerRef.current) {
+        console.log("🚀 Iniciando juego Phaser...");
+        console.log("📦 Contenedor:", gameContainerRef.current);
+        gameRef.current = initGame(gameContainerRef.current);
+      }
+    }, 200);
 
     return () => {
+      clearTimeout(timer);
       if (gameRef.current) {
+        console.log("🛑 Destruyendo juego");
         gameRef.current.destroy(true);
         gameRef.current = null;
       }
@@ -36,7 +43,9 @@ function App() {
         style={{
           border: '2px solid #3a5f3a',
           margin: '20px 0',
-          boxShadow: '0 0 20px rgba(0, 255, 0, 0.2)'
+          boxShadow: '0 0 20px rgba(0, 255, 0, 0.2)',
+          backgroundColor: '#0f130f',
+          minHeight: '600px'
         }}
       />
       
@@ -45,11 +54,10 @@ function App() {
         <div className="log-entry">[AGENTES: 2 ACTIVOS]</div>
         <div className="log-entry">[CLICK PARA MOVER MANAGER]</div>
         <div className="log-entry">[ESPACIO: MOVER ALEATORIO]</div>
+        <div className="log-entry">[PHASER: CARGANDO...]</div>
       </div>
     </div>
   );
 }
 
 export default App;
-
-
