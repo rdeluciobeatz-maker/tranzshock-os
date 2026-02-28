@@ -17,20 +17,27 @@ export class MainScene extends Phaser.Scene {
   create() {
     console.log("✨ create() llamado - Escena creada correctamente");
     
-    // Dibujar grid
+    // 1. DIBUJAR GRID
+    console.log("📐 Dibujando grid...");
     this.drawGrid();
     console.log("✅ Grid dibujado");
     
-    // Crear agentes
+    // 2. RECTÁNGULO DE PRUEBA (ROJO)
+    console.log("🔴 Dibujando rectángulo rojo de prueba en el centro");
+    const rect = this.add.rectangle(400, 300, 100, 100, 0xff0000);
+    rect.setOrigin(0.5);
+    console.log("✅ Rectángulo rojo dibujado en:", rect.x, rect.y);
+    
+    // 3. CREAR AGENTES
     console.log("🤖 Creando agentes...");
     this.createAgent('agent1', 5, 5, gameConfig.colors.agent1, 'MANAGER');
     this.createAgent('agent2', 10, 8, gameConfig.colors.agent2, 'ANALYST');
     console.log(`✅ ${this.agents.length} agentes creados`);
     
-    // Input de teclado
+    // 4. INPUT DE TECLADO
     this.cursors = this.input.keyboard.createCursorKeys();
     
-    // Evento de clic para mover
+    // 5. EVENTO DE CLIC PARA MOVER
     this.input.on('pointerdown', (pointer) => {
       const tileX = Math.floor(pointer.x / gameConfig.tileSize);
       const tileY = Math.floor(pointer.y / gameConfig.tileSize);
@@ -41,14 +48,19 @@ export class MainScene extends Phaser.Scene {
       }
     });
     
-    // Pequeña animación para confirmar que funciona
+    // 6. PEQUEÑA ANIMACIÓN DE PRUEBA
     this.tweens.add({
-      targets: this.agents[0]?.sprite,
-      alpha: 0.5,
+      targets: rect,
+      alpha: 0.2,
       duration: 500,
       yoyo: true,
-      repeat: 1
+      repeat: 2,
+      onComplete: () => {
+        console.log("🎬 Animación de prueba completada");
+      }
     });
+    
+    console.log("🎯 Escena completamente inicializada");
   }
 
   drawGrid() {
@@ -78,6 +90,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   createAgent(id, x, y, color, name) {
+    console.log(`➕ Creando agente ${name} en (${x}, ${y})`);
     const agent = new Agent(this, id, x, y, color, name);
     this.agents.push(agent);
     return agent;
