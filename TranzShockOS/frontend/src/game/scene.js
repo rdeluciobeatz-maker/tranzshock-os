@@ -9,11 +9,11 @@ export class MainScene extends Phaser.Scene {
     this.selectedAgent = null;
     this.cursors = null;
     this.zones = [];
-    console.log("🏗️ [MainScene] Constructor con selección única y paso a paso");
+    console.log("🏗️ [MainScene] Constructor");
   }
 
   create() {
-    console.log("✨ [MainScene] create() - Creando escenario completo");
+    console.log("✨ [MainScene] create()");
     
     this.drawFloor();
     this.drawZones();
@@ -22,12 +22,10 @@ export class MainScene extends Phaser.Scene {
     
     this.cursors = this.input.keyboard.createCursorKeys();
     
-    // Evento de clic para selección y movimiento
     this.input.on('pointerdown', (pointer) => {
       const tileX = Math.floor(pointer.x / gameConfig.tileSize);
       const tileY = Math.floor(pointer.y / gameConfig.tileSize);
       
-      // Verificar si clickeamos sobre algún agente
       let clickedAgent = null;
       for (let agent of this.agents) {
         if (agent.tileX === tileX && agent.tileY === tileY) {
@@ -37,122 +35,94 @@ export class MainScene extends Phaser.Scene {
       }
       
       if (clickedAgent) {
-        // SELECCIÓN: Si clickeamos un agente, lo seleccionamos (y deselecciona el anterior)
-        this.selectAgent(clickedAgent);
-        console.log(`✅ Agente seleccionado: ${clickedAgent.name}`);
+        if (this.selectedAgent) {
+          this.selectedAgent.setSelected(false);
+        }
+        this.selectedAgent = clickedAgent;
+        this.selectedAgent.setSelected(true);
+        console.log(`✅ Seleccionado: ${clickedAgent.name}`);
       } else if (this.selectedAgent) {
-        // MOVIMIENTO PASO A PASO: Mover UNA casilla en la dirección apropiada
-        this.moveSelectedAgentOneStep(tileX, tileY);
+        this.moveAgentTo(this.selectedAgent, tileX, tileY);
       }
     });
     
-    console.log(`✅ [MainScene] Escenario completo con ${this.agents.length} agentes`);
+    console.log(`✅ Escenario listo con ${this.agents.length} agentes`);
   }
 
-  selectAgent(agent) {
-    // Deseleccionar agente anterior
-    if (this.selectedAgent) {
-      this.selectedAgent.setSelected(false);
-    }
+  moveAgentTo(agent, targetX, targetY) {
+    if (agent.tileX === targetX && agent.tileY === targetY) return;
     
-    // Seleccionar nuevo agente
-    this.selectedAgent = agent;
-    agent.setSelected(true);
+    const path = this.findPath(agent.tileX, agent.tileY, targetX, targetY);
+    
+    if (path && path.length > 1) {
+      const nextStep = path[1];
+      agent.moveTo(nextStep.x, nextStep.y);
+    }
   }
 
-  moveSelectedAgentOneStep(targetTileX, targetTileY) {
-    if (!this.selectedAgent) return;
+  findPath(startX, startY, targetX, targetY) {
+    const queue = [{ x: startX, y: startY, path: [{ x: startX, y: startY }] }];
+    const visited = new Set();
+    visited.add(`${startX},${startY}`);
     
-    const currentX = this.selectedAgent.tileX;
-    const currentY = this.selectedAgent.tileY;
-    
-    // Calcular dirección (solo un paso)
-    let newX = currentX;
-    let newY = currentY;
-    
-    // Priorizar movimiento en X si la diferencia es mayor
-    if (Math.abs(targetTileX - currentX) > Math.abs(targetTileY - currentY)) {
-      // Mover en X
-      if (targetTileX > currentX) newX = currentX + 1;
-      else if (targetTileX < currentX) newX = currentX - 1;
-    } else {
-      // Mover en Y
-      if (targetTileY > currentY) newY = currentY + 1;
-      else if (targetTileY < currentY) newY = currentY - 1;
+    while (queue.length > 0) {
+      const current = queue.shift();
+      
+      if (current.x === targetX && current.y === targetY) {
+        return current.path;
+      }
+      
+      const directions = [
+        { dx: 1, dy: 0 },
+        { dx: -1, dy: 0 },
+        { dx: 0, dy: 1 },
+        { dx: 0, dy: -1 }
+      ];
+      
+      for (const dir of directions) {
+        const newX = current.x + dir.dx;
+        const newY = current.y + dir.dy;
+        const key = `${newX},${newY}`;
+        
+        if (newX >= 0 && newX < gameConfig.mapWidth && 
+            newY >= 0 && newY < gameConfig.mapHeight && 
+            !visited.has(key)) {
+          
+          visited.add(key);
+          const newPath = [...current.path, { x: newX, y: newY }];
+          queue.push({ x: newX, y: newY, path: newPath });
+        }
+      }
     }
-    
-    // Verificar límites
-    if (newX < 0 || newX >= gameConfig.mapWidth || newY < 0 || newY >= gameConfig.mapHeight) {
-      console.log("🚫 No puede moverse fuera del mapa");
-      return;
-    }
-    
-    console.log(`👣 ${this.selectedAgent.name} da un paso a [${newX}, ${newY}]`);
-    this.selectedAgent.moveTo(newX, newY);
+    return null;
   }
 
   drawFloor() {
-    this.add.rectangle(0, 0, 
-      gameConfig.width, gameConfig.height, 
-      gameConfig.colors.floor
-    ).setOrigin(0);
+    this.add.rectangle(0, 0, gameConfig.width, gameConfig.height, gameConfig.colors.floor).setOrigin(0);
   }
 
   drawZones() {
     const graphics = this.add.graphics();
     
-    // Zonas con transparencia
     graphics.fillStyle(gameConfig.colors.workstation, 0.3);
-    graphics.fillRect(2 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
-                      8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
-    
+    graphics.fillRect(2 * 32, 2 * 32, 8 * 32, 6 * 32);
     graphics.fillStyle(gameConfig.colors.server, 0.3);
-    graphics.fillRect(12 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
-                      8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
-    
+    graphics.fillRect(12 * 32, 2 * 32, 8 * 32, 6 * 32);
     graphics.fillStyle(gameConfig.colors.meeting, 0.3);
-    graphics.fillRect(22 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
-                      8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
-    
+    graphics.fillRect(22 * 32, 2 * 32, 8 * 32, 6 * 32);
     graphics.fillStyle(gameConfig.colors.repair, 0.3);
-    graphics.fillRect(2 * gameConfig.tileSize, 12 * gameConfig.tileSize, 
-                      28 * gameConfig.tileSize, 6 * gameConfig.tileSize);
+    graphics.fillRect(2 * 32, 12 * 32, 28 * 32, 6 * 32);
     
-    // Bordes
     graphics.lineStyle(2, 0x7fff7f, 0.8);
-    graphics.strokeRect(2 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
-                        8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
-    graphics.strokeRect(12 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
-                        8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
-    graphics.strokeRect(22 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
-                        8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
-    graphics.strokeRect(2 * gameConfig.tileSize, 12 * gameConfig.tileSize, 
-                        28 * gameConfig.tileSize, 6 * gameConfig.tileSize);
+    graphics.strokeRect(2 * 32, 2 * 32, 8 * 32, 6 * 32);
+    graphics.strokeRect(12 * 32, 2 * 32, 8 * 32, 6 * 32);
+    graphics.strokeRect(22 * 32, 2 * 32, 8 * 32, 6 * 32);
+    graphics.strokeRect(2 * 32, 12 * 32, 28 * 32, 6 * 32);
     
-    // Textos
-    this.add.text(3 * gameConfig.tileSize, 3 * gameConfig.tileSize, 'ESTACIONES', {
-      fontFamily: 'Share Tech Mono',
-      fontSize: '16px',
-      color: '#7fff7f'
-    });
-    
-    this.add.text(13 * gameConfig.tileSize, 3 * gameConfig.tileSize, 'SERVIDORES', {
-      fontFamily: 'Share Tech Mono',
-      fontSize: '16px',
-      color: '#7fff7f'
-    });
-    
-    this.add.text(23 * gameConfig.tileSize, 3 * gameConfig.tileSize, 'REUNIONES', {
-      fontFamily: 'Share Tech Mono',
-      fontSize: '16px',
-      color: '#7fff7f'
-    });
-    
-    this.add.text(3 * gameConfig.tileSize, 13 * gameConfig.tileSize, 'REPARACIONES', {
-      fontFamily: 'Share Tech Mono',
-      fontSize: '16px',
-      color: '#7fff7f'
-    });
+    this.add.text(3 * 32, 3 * 32, 'ESTACIONES', { fontFamily: 'Share Tech Mono', fontSize: '16px', color: '#7fff7f' });
+    this.add.text(13 * 32, 3 * 32, 'SERVIDORES', { fontFamily: 'Share Tech Mono', fontSize: '16px', color: '#7fff7f' });
+    this.add.text(23 * 32, 3 * 32, 'REUNIONES', { fontFamily: 'Share Tech Mono', fontSize: '16px', color: '#7fff7f' });
+    this.add.text(3 * 32, 13 * 32, 'REPARACIONES', { fontFamily: 'Share Tech Mono', fontSize: '16px', color: '#7fff7f' });
   }
 
   drawGrid() {
@@ -190,6 +160,31 @@ export class MainScene extends Phaser.Scene {
   update(time, delta) {
     this.agents.forEach(agent => agent.update(delta / 1000));
     
+    // Control por flechas
+    if (this.selectedAgent && this.cursors) {
+      let moved = false;
+      let newX = this.selectedAgent.tileX;
+      let newY = this.selectedAgent.tileY;
+      
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
+        newX--; moved = true;
+      } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
+        newX++; moved = true;
+      } else if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+        newY--; moved = true;
+      } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+        newY++; moved = true;
+      }
+      
+      if (moved) {
+        if (newX >= 0 && newX < gameConfig.mapWidth && 
+            newY >= 0 && newY < gameConfig.mapHeight) {
+          console.log(`⌨️ Flecha: ${this.selectedAgent.name} se mueve a [${newX}, ${newY}]`);
+          this.selectedAgent.moveTo(newX, newY);
+        }
+      }
+    }
+    
     // Tecla espacio para paso aleatorio
     if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
       if (this.selectedAgent) {
@@ -209,8 +204,6 @@ export class MainScene extends Phaser.Scene {
           console.log(`🎲 Espacio: ${this.selectedAgent.name} paso aleatorio`);
           this.selectedAgent.moveTo(newX, newY);
         }
-      } else {
-        console.log("⚠️ Selecciona un agente primero");
       }
     }
   }
