@@ -8,7 +8,6 @@ export class MainScene extends Phaser.Scene {
     this.agents = [];
     this.selectedAgent = null;
     this.cursors = null;
-    this.zones = [];
     console.log("🏗️ [MainScene] Constructor");
   }
 
@@ -20,11 +19,21 @@ export class MainScene extends Phaser.Scene {
     this.drawGrid();
     this.createAgents();
     
+    // Mostrar límites del mapa
+    this.drawBoundary();
+    
     this.cursors = this.input.keyboard.createCursorKeys();
     
     this.input.on('pointerdown', (pointer) => {
       const tileX = Math.floor(pointer.x / gameConfig.tileSize);
       const tileY = Math.floor(pointer.y / gameConfig.tileSize);
+      
+      // Verificar si está dentro del mapa
+      if (tileX < 0 || tileX >= gameConfig.mapWidth || 
+          tileY < 0 || tileY >= gameConfig.mapHeight) {
+        console.log("🚫 Click fuera del mapa");
+        return;
+      }
       
       let clickedAgent = null;
       for (let agent of this.agents) {
@@ -47,6 +56,13 @@ export class MainScene extends Phaser.Scene {
     });
     
     console.log(`✅ Escenario listo con ${this.agents.length} agentes`);
+  }
+
+  drawBoundary() {
+    // Dibujar un borde rojo alrededor del mapa (solo para referencia)
+    const graphics = this.add.graphics();
+    graphics.lineStyle(2, 0xff0000, 0.5);
+    graphics.strokeRect(0, 0, gameConfig.width, gameConfig.height);
   }
 
   moveAgentTo(agent, targetX, targetY) {
@@ -160,7 +176,6 @@ export class MainScene extends Phaser.Scene {
   update(time, delta) {
     this.agents.forEach(agent => agent.update(delta / 1000));
     
-    // Control por flechas
     if (this.selectedAgent && this.cursors) {
       let moved = false;
       let newX = this.selectedAgent.tileX;
@@ -185,7 +200,6 @@ export class MainScene extends Phaser.Scene {
       }
     }
     
-    // Tecla espacio para paso aleatorio
     if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
       if (this.selectedAgent) {
         const randomDir = Math.floor(Math.random() * 4);
