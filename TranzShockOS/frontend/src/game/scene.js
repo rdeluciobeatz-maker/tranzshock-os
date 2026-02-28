@@ -108,4 +108,10 @@ export class MainScene extends Phaser.Scene {
       }
     }
   }
+  // Después de todo, fuerza un redibujado
+setTimeout(() => {
+  console.log("⏰ Forzando redibujado...");
+  this.scene.bringToTop();
+  this.game.renderer.resize(gameConfig.width, gameConfig.height);
+}, 1000);
 }
