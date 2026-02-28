@@ -26,8 +26,7 @@ export const initGame = (parentElement) => {
     audio: {
       disableWebAudio: true
     },
-    // 👇 IMPORTANTE: Array de escenas vacío
-    scene: []
+    scene: [] // Array vacío
   };
 
   console.log("🛠 [initGame] Creando instancia de Phaser.Game...");
@@ -40,36 +39,29 @@ export const initGame = (parentElement) => {
     return null;
   }
 
-  // 2. Esperar un ciclo para asegurar que el juego está listo
-  setTimeout(() => {
-    console.log("⏰ [initGame] setTimeout: Intentando agregar escena...");
+  // 2. Esperar a que el juego esté listo (evento 'ready')
+  game.events.once('ready', () => {
+    console.log("✅ [initGame] Evento 'ready' recibido. Scene Manager disponible.");
     
-    // 3. Verificar que el Scene Manager existe
-    if (game.scene) {
-      console.log("✅ [initGame] Scene Manager encontrado.");
+    // 3. Ahora sí podemos agregar la escena de forma segura
+    try {
+      // Verificar si la escena ya existe
+      const sceneExists = game.scene.keys && game.scene.keys.includes('MainScene');
       
-      // 4. Verificar si la escena ya existe (por si acaso)
-      if (!game.scene.get('MainScene')) {
-        console.log("➕ [initGame] Añadiendo escena 'MainScene' al Scene Manager...");
-        
-        // 5. Añadir la escena (primer parámetro: clave, segundo: clase, tercero: auto-start)
-        const sceneKey = game.scene.add('MainScene', MainScene, false);
-        console.log(`🔑 [initGame] Escena añadida con clave: '${sceneKey}'`);
-        
-        // 6. Iniciar la escena explícitamente
-        console.log("🚀 [initGame] Iniciando escena 'MainScene'...");
-        game.scene.start('MainScene');
-        console.log("✅ [initGame] Escena 'MainScene' iniciada.");
+      if (!sceneExists) {
+        console.log("➕ [initGame] Añadiendo escena 'MainScene'...");
+        game.scene.add('MainScene', MainScene, true); // true = auto-start
+        console.log("✅ [initGame] Escena 'MainScene' añadida e iniciada.");
       } else {
-        console.log("⚠️ [initGame] La escena 'MainScene' ya existía. Intentando reiniciar.");
+        console.log("⚠️ [initGame] La escena ya existe. Iniciando...");
         game.scene.start('MainScene');
       }
-    } else {
-      console.error("❌ [initGame] Error: game.scene no está disponible.");
+    } catch (error) {
+      console.error("❌ [initGame] Error al manejar la escena:", error);
     }
-  }, 200); // Pequeño retraso para dar tiempo al motor a inicializarse
+  });
 
-  // 7. Capturar errores globales de Phaser
+  // 4. Capturar errores globales de Phaser
   game.events.on('error', (error) => {
     console.error("❌ [Phaser Global Error]", error);
   });
