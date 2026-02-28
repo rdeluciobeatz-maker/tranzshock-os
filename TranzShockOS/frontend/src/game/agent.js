@@ -198,25 +198,34 @@ export class Agent {
   }
   
   update(delta) {
-    // --- Movimiento Físico (solo si se está moviendo) ---
+    // --- VALIDACIÓN DE POSICIÓN (CORRECCIÓN DE TEMBLOR) ---
+    const expectedNameY = this.y - 15;
+    // Si el nombre está desfasado más de 2 píxeles, lo corregimos
+    if (Math.abs(this.nameText.y - expectedNameY) > 2) {
+      console.warn(`⚠️ Corrigiendo posición de ${this.name}`);
+      this.nameText.setPosition(this.x, expectedNameY);
+      if (this.bubble.visible) {
+        this.bubble.setPosition(this.x, this.y - 25);
+        this.bubbleText.setPosition(this.x, this.y - 25);
+      }
+    }
+    
+    // --- MOVIMIENTO FÍSICO ---
     if (this.isMoving) {
       const speed = 200 * delta;
 
-      // Mover en X
       if (Math.abs(this.x - this.targetX) > 1) {
         this.x += (this.x < this.targetX ? speed : -speed);
       } else {
         this.x = this.targetX;
       }
 
-      // Mover en Y
       if (Math.abs(this.y - this.targetY) > 1) {
         this.y += (this.y < this.targetY ? speed : -speed);
       } else {
         this.y = this.targetY;
       }
 
-      // Verificar si llegó al destino
       if (this.x === this.targetX && this.y === this.targetY) {
         this.isMoving = false;
         this.tileX = Math.floor(this.x / gameConfig.tileSize);
@@ -236,7 +245,7 @@ export class Agent {
       }
     }
 
-    // --- ACTUALIZACIÓN DE POSICIÓN DE TEXTOS (SIEMPRE) ---
+    // --- ACTUALIZACIÓN SIEMPRE ACTIVA ---
     this.sprite.setPosition(this.x, this.y);
     this.nameText.setPosition(this.x, this.y - 15);
 
