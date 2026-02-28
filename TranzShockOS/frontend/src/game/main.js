@@ -11,7 +11,6 @@ export const initGame = (parentElement) => {
     return null;
   }
 
-  // 1. Crear configuración base (SIN ESCENAS EN EL ARRAY)
   const config = {
     type: Phaser.AUTO,
     width: gameConfig.width,
@@ -34,23 +33,25 @@ export const initGame = (parentElement) => {
   try {
     game = new Phaser.Game(config);
     console.log("✅ [initGame] Instancia de Phaser.Game creada.");
+    
+    // 👇 HACER EL JUEGO GLOBAL (para diagnóstico)
+    window.__TRANZSHOCK_GAME__ = game;
+    console.log("🎮 Juego guardado globalmente como __TRANZSHOCK_GAME__");
+    
   } catch (error) {
     console.error("❌ [initGame] Error al crear Phaser.Game:", error);
     return null;
   }
 
-  // 2. Esperar a que el juego esté listo (evento 'ready')
   game.events.once('ready', () => {
     console.log("✅ [initGame] Evento 'ready' recibido. Scene Manager disponible.");
     
-    // 3. Ahora sí podemos agregar la escena de forma segura
     try {
-      // Verificar si la escena ya existe de forma compatible con Phaser
       const sceneExists = game.scene.getIndex('MainScene') !== -1;
       
       if (!sceneExists) {
         console.log("➕ [initGame] Añadiendo escena 'MainScene'...");
-        game.scene.add('MainScene', MainScene, true); // true = auto-start
+        game.scene.add('MainScene', MainScene, true);
         console.log("✅ [initGame] Escena 'MainScene' añadida e iniciada.");
       } else {
         console.log("⚠️ [initGame] La escena ya existe. Iniciando...");
@@ -61,13 +62,9 @@ export const initGame = (parentElement) => {
     }
   });
 
-  // 4. Capturar errores globales de Phaser
   game.events.on('error', (error) => {
     console.error("❌ [Phaser Global Error]", error);
   });
 
   return game;
 };
-// Después de: const game = new Phaser.Game(config);
-window.__TRANZSHOCK_GAME__ = game; // 👈 Esto lo hace global
-console.log("🎮 Juego guardado globalmente como __TRANZSHOCK_GAME__");
