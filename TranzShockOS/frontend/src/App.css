@@ -353,23 +353,36 @@ body::after {
   opacity: 0.3;
 }
 
-/* ===== NUEVO: ESTILOS PARA EL MAPA DE PHASER ===== */
+/* ===== ESTILOS PARA EL MAPA DE PHASER ===== */
 .game-container {
-  width: 800px;
-  height: 600px;
+  width: 800px !important;
+  height: 600px !important;
   margin: 20px auto;
   position: relative;
   border: 2px solid #3a5f3a;
   box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+  background-color: #0f130f;
   overflow: hidden;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 100;
 }
 
 .game-container canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background-color: #1a3a1a;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+}
+
+/* BORDE ROJO TEMPORAL PARA DEPURAR (después lo quitamos) */
+.game-container {
+  border: 3px solid #ff0000 !important;
 }
 
 /* ===== SISTEMA DE LOGS ===== */
@@ -576,28 +589,8 @@ body::after {
   }
   
   .game-container {
-    width: 100%;
-    height: auto;
+    width: 100% !important;
+    height: auto !important;
     aspect-ratio: 800/600;
   }
-
-/* ===== NUEVO: FORZAR VISIBILIDAD DEL CANVAS ===== */
-.game-container canvas {
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  background-color: #0f130f;
-  border: 1px solid #ff0000; /* Borde rojo temporal para ver dónde está */
-}
-
-/* Para depurar, podemos ver los límites del contenedor */
-.game-container {
-  border: 3px solid #00ff00 !important; /* Borde verde brillante temporal */
-  background-color: #1a1f1a;
-  min-height: 600px;
-  position: relative;
-  z-index: 10;
-}
 }
