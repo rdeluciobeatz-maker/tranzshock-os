@@ -206,47 +206,56 @@ export class Agent {
     return true;
   }
   
-  update(delta) {
-    if (this.isMoving) {
-      const speed = 200 * delta; // Velocidad aumentada
-      
-      // Mover en X
-      if (Math.abs(this.x - this.targetX) > 1) {
-        this.x += (this.x < this.targetX ? speed : -speed);
-      } else {
-        this.x = this.targetX;
-      }
-      
-      // Mover en Y
-      if (Math.abs(this.y - this.targetY) > 1) {
-        this.y += (this.y < this.targetY ? speed : -speed);
-      } else {
-        this.y = this.targetY;
-      }
-      
-      // Verificar si llegó
-      if (this.x === this.targetX && this.y === this.targetY) {
-        this.isMoving = false;
-        this.tileX = Math.floor(this.x / gameConfig.tileSize);
-        this.tileY = Math.floor(this.y / gameConfig.tileSize);
-        
-        const arrivalMessages = [
-          "✅ Llegué",
-          "🎯 Listo",
-          "📍 Aquí",
-          "👍 OK"
-        ];
-        const randomMsg = arrivalMessages[Math.floor(Math.random() * arrivalMessages.length)];
-        this.speak(randomMsg);
-        
-        this.scene.tweens.add({
-          targets: this.sprite,
-          scaleX: 1.1,
-          scaleY: 1.1,
-          duration: 100,
-          yoyo: true
-        });
-      }
+ update(delta) {
+  // --- Movimiento Físico (solo si se está moviendo) ---
+  if (this.isMoving) {
+    const speed = 200 * delta; // Velocidad
+
+    // Mover en X
+    if (Math.abs(this.x - this.targetX) > 1) {
+      this.x += (this.x < this.targetX ? speed : -speed);
+    } else {
+      this.x = this.targetX;
+    }
+
+    // Mover en Y
+    if (Math.abs(this.y - this.targetY) > 1) {
+      this.y += (this.y < this.targetY ? speed : -speed);
+    } else {
+      this.y = this.targetY;
+    }
+
+    // Verificar si llegó al destino
+    if (this.x === this.targetX && this.y === this.targetY) {
+      this.isMoving = false;
+      this.tileX = Math.floor(this.x / gameConfig.tileSize);
+      this.tileY = Math.floor(this.y / gameConfig.tileSize);
+
+      const arrivalMessages = [ "✅ Llegué", "🎯 Listo", "📍 Aquí", "👍 OK" ];
+      const randomMsg = arrivalMessages[Math.floor(Math.random() * arrivalMessages.length)];
+      this.speak(randomMsg);
+
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleX: 1.1,
+        scaleY: 1.1,
+        duration: 100,
+        yoyo: true
+      });
+    }
+  }
+
+  // --- ACTUALIZACIÓN DE POSICIÓN DE TEXTOS (SIEMPRE) ---
+  // El sprite se mueve solo, pero el texto y la burbuja deben seguirlo SIEMPRE
+  this.sprite.setPosition(this.x, this.y);
+  this.nameText.setPosition(this.x, this.y - 15); // Nombre siempre cerca
+
+  // Si la burbuja está visible, también la movemos a la nueva posición
+  if (this.bubble.visible) {
+    this.bubble.setPosition(this.x, this.y - 25);
+    this.bubbleText.setPosition(this.x, this.y - 25);
+  }
+}
       
       // ACTUALIZAR POSICIÓN DE TODO
       this.sprite.setPosition(this.x, this.y);
