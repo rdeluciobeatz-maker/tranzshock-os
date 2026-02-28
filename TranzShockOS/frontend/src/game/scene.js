@@ -6,31 +6,23 @@ export class MainScene extends Phaser.Scene {
   constructor() {
     super({ key: 'MainScene' });
     this.agents = [];
-    this.selectedAgent = null; // Agente seleccionado actualmente
+    this.selectedAgent = null;
     this.cursors = null;
     this.zones = [];
-    console.log("🏗️ [MainScene] Constructor con selección de agentes");
+    console.log("🏗️ [MainScene] Constructor con selección única y paso a paso");
   }
 
   create() {
     console.log("✨ [MainScene] create() - Creando escenario completo");
     
-    // 1. Dibujar el piso base
     this.drawFloor();
-    
-    // 2. Dibujar zonas especiales
     this.drawZones();
-    
-    // 3. Dibujar la cuadrícula
     this.drawGrid();
-    
-    // 4. Crear agentes
     this.createAgents();
     
-    // 5. Input de teclado
     this.cursors = this.input.keyboard.createCursorKeys();
     
-    // 6. Evento de clic para SELECCIONAR agentes y mover
+    // Evento de clic para selección y movimiento
     this.input.on('pointerdown', (pointer) => {
       const tileX = Math.floor(pointer.x / gameConfig.tileSize);
       const tileY = Math.floor(pointer.y / gameConfig.tileSize);
@@ -45,15 +37,12 @@ export class MainScene extends Phaser.Scene {
       }
       
       if (clickedAgent) {
-        // Si clickeamos un agente, lo seleccionamos
+        // SELECCIÓN: Si clickeamos un agente, lo seleccionamos (y deselecciona el anterior)
         this.selectAgent(clickedAgent);
         console.log(`✅ Agente seleccionado: ${clickedAgent.name}`);
       } else if (this.selectedAgent) {
-        // Si hay un agente seleccionado, lo movemos al tile clickeado
-        console.log(`🖱️ Mover ${this.selectedAgent.name} a [${tileX}, ${tileY}]`);
-        this.selectedAgent.moveTo(tileX, tileY);
-      } else {
-        console.log("⚠️ Ningún agente seleccionado. Haz clic en un agente primero.");
+        // MOVIMIENTO PASO A PASO: Mover UNA casilla en la dirección apropiada
+        this.moveSelectedAgentOneStep(tileX, tileY);
       }
     });
     
@@ -61,7 +50,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   selectAgent(agent) {
-    // Desseleccionar agente anterior
+    // Deseleccionar agente anterior
     if (this.selectedAgent) {
       this.selectedAgent.setSelected(false);
     }
@@ -69,6 +58,37 @@ export class MainScene extends Phaser.Scene {
     // Seleccionar nuevo agente
     this.selectedAgent = agent;
     agent.setSelected(true);
+  }
+
+  moveSelectedAgentOneStep(targetTileX, targetTileY) {
+    if (!this.selectedAgent) return;
+    
+    const currentX = this.selectedAgent.tileX;
+    const currentY = this.selectedAgent.tileY;
+    
+    // Calcular dirección (solo un paso)
+    let newX = currentX;
+    let newY = currentY;
+    
+    // Priorizar movimiento en X si la diferencia es mayor
+    if (Math.abs(targetTileX - currentX) > Math.abs(targetTileY - currentY)) {
+      // Mover en X
+      if (targetTileX > currentX) newX = currentX + 1;
+      else if (targetTileX < currentX) newX = currentX - 1;
+    } else {
+      // Mover en Y
+      if (targetTileY > currentY) newY = currentY + 1;
+      else if (targetTileY < currentY) newY = currentY - 1;
+    }
+    
+    // Verificar límites
+    if (newX < 0 || newX >= gameConfig.mapWidth || newY < 0 || newY >= gameConfig.mapHeight) {
+      console.log("🚫 No puede moverse fuera del mapa");
+      return;
+    }
+    
+    console.log(`👣 ${this.selectedAgent.name} da un paso a [${newX}, ${newY}]`);
+    this.selectedAgent.moveTo(newX, newY);
   }
 
   drawFloor() {
@@ -81,22 +101,19 @@ export class MainScene extends Phaser.Scene {
   drawZones() {
     const graphics = this.add.graphics();
     
-    // Zona 1: Estaciones de trabajo
+    // Zonas con transparencia
     graphics.fillStyle(gameConfig.colors.workstation, 0.3);
     graphics.fillRect(2 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
                       8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
     
-    // Zona 2: Sala de servidores
     graphics.fillStyle(gameConfig.colors.server, 0.3);
     graphics.fillRect(12 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
                       8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
     
-    // Zona 3: Área de reuniones
     graphics.fillStyle(gameConfig.colors.meeting, 0.3);
     graphics.fillRect(22 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
                       8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
     
-    // Zona 4: Área de reparaciones
     graphics.fillStyle(gameConfig.colors.repair, 0.3);
     graphics.fillRect(2 * gameConfig.tileSize, 12 * gameConfig.tileSize, 
                       28 * gameConfig.tileSize, 6 * gameConfig.tileSize);
@@ -173,14 +190,27 @@ export class MainScene extends Phaser.Scene {
   update(time, delta) {
     this.agents.forEach(agent => agent.update(delta / 1000));
     
+    // Tecla espacio para paso aleatorio
     if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
       if (this.selectedAgent) {
-        const randomX = Math.floor(Math.random() * gameConfig.mapWidth);
-        const randomY = Math.floor(Math.random() * gameConfig.mapHeight);
-        console.log(`🎲 Espacio: moviendo ${this.selectedAgent.name} a [${randomX}, ${randomY}]`);
-        this.selectedAgent.moveTo(randomX, randomY);
+        const randomDir = Math.floor(Math.random() * 4);
+        let newX = this.selectedAgent.tileX;
+        let newY = this.selectedAgent.tileY;
+        
+        switch(randomDir) {
+          case 0: newX++; break;
+          case 1: newX--; break;
+          case 2: newY++; break;
+          case 3: newY--; break;
+        }
+        
+        if (newX >= 0 && newX < gameConfig.mapWidth && 
+            newY >= 0 && newY < gameConfig.mapHeight) {
+          console.log(`🎲 Espacio: ${this.selectedAgent.name} paso aleatorio`);
+          this.selectedAgent.moveTo(newX, newY);
+        }
       } else {
-        console.log("⚠️ Selecciona un agente primero (clic en él)");
+        console.log("⚠️ Selecciona un agente primero");
       }
     }
   }
