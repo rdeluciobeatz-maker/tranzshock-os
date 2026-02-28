@@ -198,19 +198,7 @@ export class Agent {
   }
   
   update(delta) {
-    // --- VALIDACIÓN DE POSICIÓN (CORRECCIÓN DE TEMBLOR) ---
-    const expectedNameY = this.y - 15;
-    // Si el nombre está desfasado más de 2 píxeles, lo corregimos
-    if (Math.abs(this.nameText.y - expectedNameY) > 2) {
-      console.warn(`⚠️ Corrigiendo posición de ${this.name}`);
-      this.nameText.setPosition(this.x, expectedNameY);
-      if (this.bubble.visible) {
-        this.bubble.setPosition(this.x, this.y - 25);
-        this.bubbleText.setPosition(this.x, this.y - 25);
-      }
-    }
-    
-    // --- MOVIMIENTO FÍSICO ---
+    // --- MOVIMIENTO FÍSICO (PRIMERO) ---
     if (this.isMoving) {
       const speed = 200 * delta;
 
@@ -245,13 +233,20 @@ export class Agent {
       }
     }
 
-    // --- ACTUALIZACIÓN SIEMPRE ACTIVA ---
+    // --- ACTUALIZACIÓN SIEMPRE ACTIVA (DESPUÉS) ---
     this.sprite.setPosition(this.x, this.y);
     this.nameText.setPosition(this.x, this.y - 15);
 
     if (this.bubble.visible) {
       this.bubble.setPosition(this.x, this.y - 25);
       this.bubbleText.setPosition(this.x, this.y - 25);
+    }
+
+    // --- VALIDACIÓN SUAVE (OPCIONAL) ---
+    const expectedNameY = this.y - 15;
+    if (Math.abs(this.nameText.y - expectedNameY) > 2) {
+      // Solo corregimos si está muy desfasado, sin warning para no saturar
+      this.nameText.setPosition(this.x, expectedNameY);
     }
   }
 }
