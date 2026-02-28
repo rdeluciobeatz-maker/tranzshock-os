@@ -45,8 +45,8 @@ export const initGame = (parentElement) => {
     
     // 3. Ahora sí podemos agregar la escena de forma segura
     try {
-      // Verificar si la escena ya existe
-      const sceneExists = game.scene.keys && game.scene.keys.includes('MainScene');
+      // Verificar si la escena ya existe de forma compatible con Phaser
+      const sceneExists = game.scene.getIndex('MainScene') !== -1;
       
       if (!sceneExists) {
         console.log("➕ [initGame] Añadiendo escena 'MainScene'...");
