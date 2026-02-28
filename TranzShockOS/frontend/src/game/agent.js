@@ -19,7 +19,7 @@ export class Agent {
     this.isMoving = false;
     this.direction = 'down';
     
-    // Frases posibles para cada tipo de agente
+    // Frases para cada tipo
     this.phrases = {
       'MANAGER': [
         "📊 Revisando KPIs",
@@ -55,26 +55,26 @@ export class Agent {
     this.sprite = scene.add.graphics();
     this.draw();
     
-    // Nombre
-    this.nameText = scene.add.text(this.x, this.y - 18, name, {
+    // NOMBRE (más cerca del agente)
+    this.nameText = scene.add.text(this.x, this.y - 15, name, {
       fontFamily: 'Share Tech Mono',
-      fontSize: '11px',
+      fontSize: '10px',
       color: '#b0ffb0',
       backgroundColor: '#0f1f0f',
-      padding: { x: 3, y: 1 },
+      padding: { x: 2, y: 1 },
       resolution: 2
     }).setOrigin(0.5);
     
-    // Burbuja de texto (invisible al inicio)
+    // BURBUJA DE TEXTO (invisible al inicio)
     this.bubble = scene.add.graphics();
     this.bubbleText = scene.add.text(0, 0, '', {
       fontFamily: 'Share Tech Mono',
-      fontSize: '10px',
+      fontSize: '9px',
       color: '#000000',
       backgroundColor: '#7fff7f',
-      padding: { x: 4, y: 2 },
+      padding: { x: 3, y: 1 },
       resolution: 2,
-      wordWrap: { width: 120 }
+      wordWrap: { width: 100 }
     }).setOrigin(0.5).setVisible(false);
     
     this.bubble.setVisible(false);
@@ -108,26 +108,15 @@ export class Agent {
     }
     
     this.sprite.fillStyle(fillColor, 1);
-    this.sprite.fillRect(this.x - 10, this.y - 10, 20, 20);
+    this.sprite.fillRect(this.x - 8, this.y - 8, 16, 16); // Agente más pequeño
     
     this.sprite.fillStyle(0xffffff, 1);
+    this.sprite.fillRect(this.x - 4, this.y - 4, 2, 2);
+    this.sprite.fillRect(this.x + 2, this.y - 4, 2, 2);
     
-    if (this.direction === 'down' || this.direction === 'up') {
-      this.sprite.fillRect(this.x - 5, this.y - 5, 3, 3);
-      this.sprite.fillRect(this.x + 2, this.y - 5, 3, 3);
-    } else {
-      this.sprite.fillRect(this.x - 2, this.y - 5, 3, 3);
-      this.sprite.fillRect(this.x - 2, this.y + 2, 3, 3);
-    }
-    
-    const borderWidth = this.isSelected ? 3 : 1;
+    const borderWidth = this.isSelected ? 2 : 1;
     this.sprite.lineStyle(borderWidth, 0x7fff7f, 1);
-    this.sprite.strokeRect(this.x - 10, this.y - 10, 20, 20);
-    
-    if (this.isSelected) {
-      this.sprite.fillStyle(0x7fff7f, 1);
-      this.sprite.fillRect(this.x + 8, this.y - 8, 3, 3);
-    }
+    this.sprite.strokeRect(this.x - 8, this.y - 8, 16, 16);
   }
   
   setSelected(selected) {
@@ -136,13 +125,11 @@ export class Agent {
     this.startIdleAnimation();
     
     if (selected) {
-      this.speak("✅ ¡Listo para trabajar!");
+      this.speak("✅ ¡Listo!");
     }
   }
   
-  // NUEVO: Método para hablar
   speak(message) {
-    // Si no hay mensaje, elegir uno aleatorio de las frases del agente
     if (!message) {
       const agentPhrases = this.phrases[this.name] || this.phrases['MANAGER'];
       const randomIndex = Math.floor(Math.random() * agentPhrases.length);
@@ -151,44 +138,41 @@ export class Agent {
     
     // Posición de la burbuja (encima del agente)
     const bubbleX = this.x;
-    const bubbleY = this.y - 40;
+    const bubbleY = this.y - 25;
     
     // Actualizar texto
     this.bubbleText.setText(message);
     this.bubbleText.setPosition(bubbleX, bubbleY);
     this.bubbleText.setVisible(true);
     
-    // Dibujar burbuja (fondo blanco/verde)
+    // Dibujar burbuja
     this.bubble.clear();
     this.bubble.fillStyle(0x7fff7f, 1);
     
-    // Calcular tamaño según texto
-    const textWidth = this.bubbleText.width + 20;
-    const textHeight = this.bubbleText.height + 10;
+    const textWidth = this.bubbleText.width + 10;
+    const textHeight = this.bubbleText.height + 6;
     
-    // Dibujar rectángulo redondeado
     this.bubble.fillRoundedRect(
       bubbleX - textWidth/2,
       bubbleY - textHeight/2,
       textWidth,
       textHeight,
-      5
+      3
     );
     
-    // Borde más oscuro
-    this.bubble.lineStyle(2, 0x3f9f3f, 1);
+    this.bubble.lineStyle(1, 0x3f9f3f, 1);
     this.bubble.strokeRoundedRect(
       bubbleX - textWidth/2,
       bubbleY - textHeight/2,
       textWidth,
       textHeight,
-      5
+      3
     );
     
     this.bubble.setVisible(true);
     
-    // Ocultar después de 3 segundos
-    this.scene.time.delayedCall(3000, () => {
+    // Ocultar después de 2 segundos
+    this.scene.time.delayedCall(2000, () => {
       this.bubble.setVisible(false);
       this.bubbleText.setVisible(false);
     });
@@ -200,13 +184,11 @@ export class Agent {
       return false;
     }
     
-    // Hablar al moverse
     const moveMessages = [
-      "🚶 Voy para allá",
+      "🚶 Voy",
       "🔄 En camino",
-      "📍 Objetivo: " + tileX + "," + tileY,
-      "⚡ Moviéndome",
-      "➡️ A la orden"
+      "📍 A la orden",
+      "⚡ Moviendo"
     ];
     const randomMsg = moveMessages[Math.floor(Math.random() * moveMessages.length)];
     this.speak(randomMsg);
@@ -226,53 +208,54 @@ export class Agent {
   
   update(delta) {
     if (this.isMoving) {
-      const speed = 150 * delta;
+      const speed = 200 * delta; // Velocidad aumentada
       
+      // Mover en X
       if (Math.abs(this.x - this.targetX) > 1) {
         this.x += (this.x < this.targetX ? speed : -speed);
+      } else {
+        this.x = this.targetX;
       }
       
+      // Mover en Y
       if (Math.abs(this.y - this.targetY) > 1) {
         this.y += (this.y < this.targetY ? speed : -speed);
+      } else {
+        this.y = this.targetY;
       }
       
-      if (Math.abs(this.x - this.targetX) <= 1 && Math.abs(this.y - this.targetY) <= 1) {
-        this.x = this.targetX;
-        this.y = this.targetY;
+      // Verificar si llegó
+      if (this.x === this.targetX && this.y === this.targetY) {
         this.isMoving = false;
         this.tileX = Math.floor(this.x / gameConfig.tileSize);
         this.tileY = Math.floor(this.y / gameConfig.tileSize);
         
-        // Hablar al llegar
         const arrivalMessages = [
           "✅ Llegué",
-          "🎯 Misión cumplida",
-          "📍 Aquí estoy",
-          "👍 Listo",
-          "💪 Tarea completada"
+          "🎯 Listo",
+          "📍 Aquí",
+          "👍 OK"
         ];
         const randomMsg = arrivalMessages[Math.floor(Math.random() * arrivalMessages.length)];
         this.speak(randomMsg);
         
         this.scene.tweens.add({
           targets: this.sprite,
-          scaleX: 1.05,
-          scaleY: 1.05,
-          duration: 150,
-          yoyo: true,
-          onComplete: () => {
-            this.sprite.setScale(1);
-          }
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 100,
+          yoyo: true
         });
       }
       
+      // ACTUALIZAR POSICIÓN DE TODO
       this.sprite.setPosition(this.x, this.y);
-      this.nameText.setPosition(this.x, this.y - 18);
+      this.nameText.setPosition(this.x, this.y - 15);
       
-      // Mover burbuja si está visible
+      // Si la burbuja está visible, también la movemos
       if (this.bubble.visible) {
-        this.bubble.setPosition(this.x, this.y - 40);
-        this.bubbleText.setPosition(this.x, this.y - 40);
+        this.bubble.setPosition(this.x, this.y - 25);
+        this.bubbleText.setPosition(this.x, this.y - 25);
       }
     }
   }
