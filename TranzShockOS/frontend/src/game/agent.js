@@ -25,25 +25,30 @@ export class Agent {
       fontSize: '12px',
       color: '#b0ffb0',
       backgroundColor: '#0f1f0f',
-      padding: { x: 4, y: 2 }
+      padding: { x: 4, y: 2 },
+      resolution: 2
     }).setOrigin(0.5);
   }
   
   draw() {
     this.sprite.clear();
     
+    // Cuerpo
     this.sprite.fillStyle(this.color, 1);
     this.sprite.fillRect(this.x - 12, this.y - 12, 24, 24);
     
+    // Ojos
     this.sprite.fillStyle(0xffffff, 1);
     this.sprite.fillRect(this.x - 6, this.y - 6, 4, 4);
     this.sprite.fillRect(this.x + 2, this.y - 6, 4, 4);
     
+    // Borde
     this.sprite.lineStyle(2, 0x7fff7f, 1);
     this.sprite.strokeRect(this.x - 12, this.y - 12, 24, 24);
   }
   
   moveTo(tileX, tileY) {
+    console.log(`🚶 ${this.name} moviéndose a [${tileX}, ${tileY}]`);
     this.targetX = tileX * gameConfig.tileSize + gameConfig.tileSize/2;
     this.targetY = tileY * gameConfig.tileSize + gameConfig.tileSize/2;
     this.isMoving = true;
@@ -51,7 +56,7 @@ export class Agent {
   
   update(delta) {
     if (this.isMoving) {
-      const speed = 100 * delta;
+      const speed = 150 * delta;
       
       if (Math.abs(this.x - this.targetX) > 1) {
         this.x += (this.x < this.targetX ? speed : -speed);
@@ -67,6 +72,7 @@ export class Agent {
         this.isMoving = false;
         this.tileX = Math.floor(this.x / gameConfig.tileSize);
         this.tileY = Math.floor(this.y / gameConfig.tileSize);
+        console.log(`✅ ${this.name} llegó a [${this.tileX}, ${this.tileY}]`);
       }
       
       this.sprite.setPosition(this.x, this.y);
