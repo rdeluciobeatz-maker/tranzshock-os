@@ -11,7 +11,7 @@ export const initGame = (parentElement) => {
     return null;
   }
 
-  // Crear configuración
+  // 1. Crear configuración SIN escenas
   const config = {
     type: Phaser.AUTO,
     width: gameConfig.width,
@@ -26,23 +26,25 @@ export const initGame = (parentElement) => {
     audio: {
       disableWebAudio: true
     },
-    scene: [] // Empezamos sin escenas
+    scene: [] // <--- EMPEZAMOS SIN ESCENAS
   };
 
   console.log("🛠 Creando juego...");
   const game = new Phaser.Game(config);
-  
-  // Registrar evento cuando el juego esté listo
+
+  // 2. Cuando el juego esté listo, agregamos la escena manualmente
   game.events.once('ready', () => {
-    console.log("✅ Juego listo, agregando escena...");
-    
-    // Agregar la escena manualmente
-    game.scene.add('MainScene', MainScene, true);
-    
-    console.log("🎬 Escena 'MainScene' agregada y lanzada");
+    console.log("✅ Juego listo. Agregando escena 'MainScene'...");
+    try {
+      // Añadir la escena al administrador de escenas y ejecutarla
+      game.scene.add('MainScene', MainScene, true);
+      console.log("🎬 Escena 'MainScene' agregada y lanzada con éxito.");
+    } catch (error) {
+      console.error("❌ Error al agregar la escena:", error);
+    }
   });
 
-  // Verificar errores
+  // 3. Capturar cualquier error global de Phaser
   game.events.on('error', (error) => {
     console.error("❌ Error en Phaser:", error);
   });
