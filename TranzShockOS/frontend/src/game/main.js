@@ -68,3 +68,6 @@ export const initGame = (parentElement) => {
 
   return game;
 };
+// Después de: const game = new Phaser.Game(config);
+window.__TRANZSHOCK_GAME__ = game; // 👈 Esto lo hace global
+console.log("🎮 Juego guardado globalmente como __TRANZSHOCK_GAME__");
