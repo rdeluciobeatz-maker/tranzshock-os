@@ -12,35 +12,43 @@ export class MainScene extends Phaser.Scene {
   }
 
   preload() {
-    console.log("📦 preload() de MainScene ejecutado");
+    console.log("📦 preload() de MainScene ejecutado (sin assets)");
   }
 
   create() {
     console.log("✨ create() de MainScene EJECUTADO - ESCENA ACTIVA");
-    
-    // Fondo verde
+
+    // Fondo verde oscuro
     this.add.rectangle(0, 0, gameConfig.width, gameConfig.height, 0x1a3a1a).setOrigin(0);
-    
-    // Texto grande para confirmar que funciona
-    const text = this.add.text(400, 300, '✅ MAPA ACTIVO', {
+
+    // Texto grande de confirmación
+    const texto = this.add.text(400, 300, '✅ MAPA ACTIVO', {
       fontFamily: 'Share Tech Mono',
-      fontSize: '32px',
-      color: '#7fff7f'
+      fontSize: '48px',
+      color: '#7fff7f',
+      stroke: '#0f3f0f',
+      strokeThickness: 6
     }).setOrigin(0.5);
-    
-    // Animación del texto
+
+    // Hacemos que el texto parpadee para ver que la escena se actualiza
     this.tweens.add({
-      targets: text,
+      targets: texto,
       alpha: 0.3,
-      duration: 1000,
+      duration: 800,
       yoyo: true,
       repeat: -1
     });
-    
-    console.log("✅ create() completado - Elementos añadidos");
+
+    // Dibujar un grid simple para referencia
+    const graphics = this.add.graphics();
+    graphics.lineStyle(2, 0x3a6f3a, 0.8);
+    graphics.strokeRect(50, 50, 700, 500);
+
+    console.log("✅ create() completado - Elementos visuales añadidos.");
   }
 
   update() {
-    // Por ahora vacío
+    // Vacío por ahora, pero podemos poner un log ocasional
+    // console.log("🔄 update() en ejecución");
   }
 }
