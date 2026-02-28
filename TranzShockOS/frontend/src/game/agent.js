@@ -62,18 +62,9 @@ export class Agent {
       resolution: 2
     }).setOrigin(0.5);
     
-    this.bubble = scene.add.graphics();
-    this.bubbleText = scene.add.text(0, 0, '', {
-      fontFamily: 'Share Tech Mono',
-      fontSize: '9px',
-      color: '#000000',
-      backgroundColor: '#7fff7f',
-      padding: { x: 3, y: 1 },
-      resolution: 2,
-      wordWrap: { width: 100 }
-    }).setOrigin(0.5).setVisible(false);
-    
-    this.bubble.setVisible(false);
+    // BURBUJA DESACTIVADA TEMPORALMENTE
+    // this.bubble = scene.add.graphics();
+    // this.bubbleText = scene.add.text(0, 0, '', { ... }).setVisible(false);
     
     this.idleTween = null;
     this.startIdleAnimation();
@@ -120,53 +111,15 @@ export class Agent {
     this.startIdleAnimation();
     
     if (selected) {
-      this.speak("✅ ¡Listo!");
+      console.log(`✅ ${this.name} seleccionado`);
     }
   }
   
+  // speak desactivado temporalmente
   speak(message) {
-    if (!message) {
-      const agentPhrases = this.phrases[this.name] || this.phrases['MANAGER'];
-      const randomIndex = Math.floor(Math.random() * agentPhrases.length);
-      message = agentPhrases[randomIndex];
-    }
-    
-    const bubbleX = this.x;
-    const bubbleY = this.y - 25;
-    
-    this.bubbleText.setText(message);
-    this.bubbleText.setPosition(bubbleX, bubbleY);
-    this.bubbleText.setVisible(true);
-    
-    this.bubble.clear();
-    this.bubble.fillStyle(0x7fff7f, 1);
-    
-    const textWidth = this.bubbleText.width + 10;
-    const textHeight = this.bubbleText.height + 6;
-    
-    this.bubble.fillRoundedRect(
-      bubbleX - textWidth/2,
-      bubbleY - textHeight/2,
-      textWidth,
-      textHeight,
-      3
-    );
-    
-    this.bubble.lineStyle(1, 0x3f9f3f, 1);
-    this.bubble.strokeRoundedRect(
-      bubbleX - textWidth/2,
-      bubbleY - textHeight/2,
-      textWidth,
-      textHeight,
-      3
-    );
-    
-    this.bubble.setVisible(true);
-    
-    this.scene.time.delayedCall(2000, () => {
-      this.bubble.setVisible(false);
-      this.bubbleText.setVisible(false);
-    });
+    // Burbuja desactivada para permitir movimiento
+    console.log(`💬 ${this.name}: ${message || '...'}`);
+    return;
   }
   
   moveTo(tileX, tileY) {
@@ -198,9 +151,10 @@ export class Agent {
   }
   
   update(delta) {
-    // --- MOVIMIENTO FÍSICO (PRIMERO) ---
+    // --- MOVIMIENTO FÍSICO ---
     if (this.isMoving) {
-      const speed = 200 * delta;
+      // Velocidad fija para movimiento visible
+      const speed = 3; // píxeles por frame
 
       if (Math.abs(this.x - this.targetX) > 1) {
         this.x += (this.x < this.targetX ? speed : -speed);
@@ -214,7 +168,9 @@ export class Agent {
         this.y = this.targetY;
       }
 
-      if (this.x === this.targetX && this.y === this.targetY) {
+      if (Math.abs(this.x - this.targetX) <= 1 && Math.abs(this.y - this.targetY) <= 1) {
+        this.x = this.targetX;
+        this.y = this.targetY;
         this.isMoving = false;
         this.tileX = Math.floor(this.x / gameConfig.tileSize);
         this.tileY = Math.floor(this.y / gameConfig.tileSize);
@@ -233,20 +189,8 @@ export class Agent {
       }
     }
 
-    // --- ACTUALIZACIÓN SIEMPRE ACTIVA (DESPUÉS) ---
+    // --- ACTUALIZACIÓN SIEMPRE ACTIVA ---
     this.sprite.setPosition(this.x, this.y);
     this.nameText.setPosition(this.x, this.y - 15);
-
-    if (this.bubble.visible) {
-      this.bubble.setPosition(this.x, this.y - 25);
-      this.bubbleText.setPosition(this.x, this.y - 25);
-    }
-
-    // --- VALIDACIÓN SUAVE (OPCIONAL) ---
-    const expectedNameY = this.y - 15;
-    if (Math.abs(this.nameText.y - expectedNameY) > 2) {
-      // Solo corregimos si está muy desfasado, sin warning para no saturar
-      this.nameText.setPosition(this.x, expectedNameY);
-    }
   }
 }
