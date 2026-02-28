@@ -7,7 +7,7 @@ export const initGame = (parentElement) => {
   console.log("📌 [initGame] Parent element:", parentElement);
 
   if (!parentElement) {
-    console.error("❌ [initGame] Error: parentElement es null o undefined");
+    console.error("❌ [initGame] Error: parentElement es null");
     return null;
   }
 
@@ -25,7 +25,7 @@ export const initGame = (parentElement) => {
     audio: {
       disableWebAudio: true
     },
-    scene: [] // Array vacío
+    scene: []
   };
 
   console.log("🛠 [initGame] Creando instancia de Phaser.Game...");
@@ -34,9 +34,31 @@ export const initGame = (parentElement) => {
     game = new Phaser.Game(config);
     console.log("✅ [initGame] Instancia de Phaser.Game creada.");
     
-    // 👇 HACER EL JUEGO GLOBAL (para diagnóstico)
+    // 👇 NUEVO: Forzar visibilidad del canvas
+    setTimeout(() => {
+      const canvas = parentElement.querySelector('canvas');
+      if (canvas) {
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.display = 'block';
+        canvas.style.visibility = 'visible';
+        canvas.style.backgroundColor = '#ff0000'; // Rojo temporal
+        console.log('🎨 Canvas forzado visible');
+      } else {
+        console.log('❌ Canvas no encontrado - creando respaldo');
+        const fallbackCanvas = document.createElement('canvas');
+        fallbackCanvas.width = gameConfig.width;
+        fallbackCanvas.height = gameConfig.height;
+        fallbackCanvas.style.width = '100%';
+        fallbackCanvas.style.height = '100%';
+        fallbackCanvas.style.backgroundColor = '#00ff00';
+        fallbackCanvas.style.display = 'block';
+        parentElement.appendChild(fallbackCanvas);
+        console.log('🟢 Canvas de respaldo creado');
+      }
+    }, 1000);
+    
     window.__TRANZSHOCK_GAME__ = game;
-    console.log("🎮 Juego guardado globalmente como __TRANZSHOCK_GAME__");
     
   } catch (error) {
     console.error("❌ [initGame] Error al crear Phaser.Game:", error);
@@ -44,7 +66,7 @@ export const initGame = (parentElement) => {
   }
 
   game.events.once('ready', () => {
-    console.log("✅ [initGame] Evento 'ready' recibido. Scene Manager disponible.");
+    console.log("✅ [initGame] Evento 'ready' recibido.");
     
     try {
       const sceneExists = game.scene.getIndex('MainScene') !== -1;
