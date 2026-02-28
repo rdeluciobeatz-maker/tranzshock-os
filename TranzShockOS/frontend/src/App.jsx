@@ -188,4 +188,28 @@ function App() {
   );
 }
 
+
 export default App;
+
+// Agrega un estado de carga
+const [loadingData, setLoadingData] = useState(true);
+
+// Modifica tu función fetchAllData
+const fetchAllData = async () => {
+  try {
+    setLoadingData(true);
+    // ... el resto de tu lógica de fetch ...
+  } catch (error) {
+    console.error('Error:', error);
+    setSystemStatus('OFFLINE');
+  } finally {
+    setLoadingData(false);
+  }
+};
+
+// En tu JSX, dentro del panel de Sheets, puedes mostrar un mensaje de carga
+{loadingData ? (
+  <div className="loading-message">🔄 DESPERTANDO SISTEMA...</div>
+) : (
+  // ... tu contenido actual de Sheets ...
+)}
