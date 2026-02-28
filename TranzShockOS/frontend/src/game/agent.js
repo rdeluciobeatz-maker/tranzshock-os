@@ -19,7 +19,6 @@ export class Agent {
     this.isMoving = false;
     this.direction = 'down';
     
-    // Frases para cada tipo
     this.phrases = {
       'MANAGER': [
         "📊 Revisando KPIs",
@@ -51,11 +50,9 @@ export class Agent {
       ]
     };
     
-    // Sprite principal
     this.sprite = scene.add.graphics();
     this.draw();
     
-    // NOMBRE (más cerca del agente)
     this.nameText = scene.add.text(this.x, this.y - 15, name, {
       fontFamily: 'Share Tech Mono',
       fontSize: '10px',
@@ -65,7 +62,6 @@ export class Agent {
       resolution: 2
     }).setOrigin(0.5);
     
-    // BURBUJA DE TEXTO (invisible al inicio)
     this.bubble = scene.add.graphics();
     this.bubbleText = scene.add.text(0, 0, '', {
       fontFamily: 'Share Tech Mono',
@@ -79,7 +75,6 @@ export class Agent {
     
     this.bubble.setVisible(false);
     
-    // Animación idle
     this.idleTween = null;
     this.startIdleAnimation();
   }
@@ -108,7 +103,7 @@ export class Agent {
     }
     
     this.sprite.fillStyle(fillColor, 1);
-    this.sprite.fillRect(this.x - 8, this.y - 8, 16, 16); // Agente más pequeño
+    this.sprite.fillRect(this.x - 8, this.y - 8, 16, 16);
     
     this.sprite.fillStyle(0xffffff, 1);
     this.sprite.fillRect(this.x - 4, this.y - 4, 2, 2);
@@ -136,16 +131,13 @@ export class Agent {
       message = agentPhrases[randomIndex];
     }
     
-    // Posición de la burbuja (encima del agente)
     const bubbleX = this.x;
     const bubbleY = this.y - 25;
     
-    // Actualizar texto
     this.bubbleText.setText(message);
     this.bubbleText.setPosition(bubbleX, bubbleY);
     this.bubbleText.setVisible(true);
     
-    // Dibujar burbuja
     this.bubble.clear();
     this.bubble.fillStyle(0x7fff7f, 1);
     
@@ -171,7 +163,6 @@ export class Agent {
     
     this.bubble.setVisible(true);
     
-    // Ocultar después de 2 segundos
     this.scene.time.delayedCall(2000, () => {
       this.bubble.setVisible(false);
       this.bubbleText.setVisible(false);
@@ -206,66 +197,52 @@ export class Agent {
     return true;
   }
   
- update(delta) {
-  // --- Movimiento Físico (solo si se está moviendo) ---
-  if (this.isMoving) {
-    const speed = 200 * delta; // Velocidad
+  update(delta) {
+    // --- Movimiento Físico (solo si se está moviendo) ---
+    if (this.isMoving) {
+      const speed = 200 * delta;
 
-    // Mover en X
-    if (Math.abs(this.x - this.targetX) > 1) {
-      this.x += (this.x < this.targetX ? speed : -speed);
-    } else {
-      this.x = this.targetX;
-    }
-
-    // Mover en Y
-    if (Math.abs(this.y - this.targetY) > 1) {
-      this.y += (this.y < this.targetY ? speed : -speed);
-    } else {
-      this.y = this.targetY;
-    }
-
-    // Verificar si llegó al destino
-    if (this.x === this.targetX && this.y === this.targetY) {
-      this.isMoving = false;
-      this.tileX = Math.floor(this.x / gameConfig.tileSize);
-      this.tileY = Math.floor(this.y / gameConfig.tileSize);
-
-      const arrivalMessages = [ "✅ Llegué", "🎯 Listo", "📍 Aquí", "👍 OK" ];
-      const randomMsg = arrivalMessages[Math.floor(Math.random() * arrivalMessages.length)];
-      this.speak(randomMsg);
-
-      this.scene.tweens.add({
-        targets: this.sprite,
-        scaleX: 1.1,
-        scaleY: 1.1,
-        duration: 100,
-        yoyo: true
-      });
-    }
-  }
-
-  // --- ACTUALIZACIÓN DE POSICIÓN DE TEXTOS (SIEMPRE) ---
-  // El sprite se mueve solo, pero el texto y la burbuja deben seguirlo SIEMPRE
-  this.sprite.setPosition(this.x, this.y);
-  this.nameText.setPosition(this.x, this.y - 15); // Nombre siempre cerca
-
-  // Si la burbuja está visible, también la movemos a la nueva posición
-  if (this.bubble.visible) {
-    this.bubble.setPosition(this.x, this.y - 25);
-    this.bubbleText.setPosition(this.x, this.y - 25);
-  }
-}
-      
-      // ACTUALIZAR POSICIÓN DE TODO
-      this.sprite.setPosition(this.x, this.y);
-      this.nameText.setPosition(this.x, this.y - 15);
-      
-      // Si la burbuja está visible, también la movemos
-      if (this.bubble.visible) {
-        this.bubble.setPosition(this.x, this.y - 25);
-        this.bubbleText.setPosition(this.x, this.y - 25);
+      // Mover en X
+      if (Math.abs(this.x - this.targetX) > 1) {
+        this.x += (this.x < this.targetX ? speed : -speed);
+      } else {
+        this.x = this.targetX;
       }
+
+      // Mover en Y
+      if (Math.abs(this.y - this.targetY) > 1) {
+        this.y += (this.y < this.targetY ? speed : -speed);
+      } else {
+        this.y = this.targetY;
+      }
+
+      // Verificar si llegó al destino
+      if (this.x === this.targetX && this.y === this.targetY) {
+        this.isMoving = false;
+        this.tileX = Math.floor(this.x / gameConfig.tileSize);
+        this.tileY = Math.floor(this.y / gameConfig.tileSize);
+
+        const arrivalMessages = [ "✅ Llegué", "🎯 Listo", "📍 Aquí", "👍 OK" ];
+        const randomMsg = arrivalMessages[Math.floor(Math.random() * arrivalMessages.length)];
+        this.speak(randomMsg);
+
+        this.scene.tweens.add({
+          targets: this.sprite,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 100,
+          yoyo: true
+        });
+      }
+    }
+
+    // --- ACTUALIZACIÓN DE POSICIÓN DE TEXTOS (SIEMPRE) ---
+    this.sprite.setPosition(this.x, this.y);
+    this.nameText.setPosition(this.x, this.y - 15);
+
+    if (this.bubble.visible) {
+      this.bubble.setPosition(this.x, this.y - 25);
+      this.bubbleText.setPosition(this.x, this.y - 25);
     }
   }
 }
