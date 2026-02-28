@@ -1,0 +1,3 @@
+FROM python:3.11-slim
+RUN echo "Estructura de archivos:" && ls -R
+CMD ["python", "-c", "print('Diagnóstico completo')"]
