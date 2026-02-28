@@ -1,366 +1,55 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { 
-  Activity, Cpu, HardDrive, Wifi, 
-  Battery, Code, PlusCircle, Save,
-  DollarSign, AlertTriangle, Package, Clipboard,
-  User, Star, Zap, Shield, Target
-} from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { initGame } from './game/main';
 import './App.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
 function App() {
-  const [systemAgents, setSystemAgents] = useState({});
-  const [customAgents, setCustomAgents] = useState([]);
-  const [presupuestos, setPresupuestos] = useState([]);
-  const [contabilidad, setContabilidad] = useState({});
-  const [alertas, setAlertas] = useState([]);
-  const [inventario, setInventario] = useState([]);
-  const [systemStatus, setSystemStatus] = useState('LOADING');
-  const [showAgentForm, setShowAgentForm] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
-  const [newAgent, setNewAgent] = useState({
-    name: '',
-    role: 'CUSTOM AGENT',
-    color: '#7fff7f',
-    icon: 'user',
-    task: 'Esperando asignación',
-    progress: 0
-  });
+  const gameRef = useRef(null);
+  const gameContainerRef = useRef(null);
 
   useEffect(() => {
-    fetchAllData();
-    const interval = setInterval(fetchAllData, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!gameRef.current && gameContainerRef.current) {
+      gameRef.current = initGame(gameContainerRef.current);
+    }
 
-  const fetchAllData = async () => {
-    try {
-      setLoadingData(true);
-      
-      const statusRes = await axios.get(`${API_URL}/api/status`);
-      setSystemStatus(statusRes.data.simulation_status);
-
-      const agentsRes = await axios.get(`${API_URL}/api/agents`);
-      const agentsMap = {};
-      agentsRes.data.forEach(agent => {
-        agentsMap[agent.role.toLowerCase()] = agent;
-      });
-      setSystemAgents(agentsMap);
-
-      const savedAgents = localStorage.getItem('tranzshock-custom-agents');
-      if (savedAgents) {
-        setCustomAgents(JSON.parse(savedAgents));
+    return () => {
+      if (gameRef.current) {
+        gameRef.current.destroy(true);
+        gameRef.current = null;
       }
-
-      const presRes = await axios.get(`${API_URL}/api/presupuestos?estado=pendiente`);
-      setPresupuestos(presRes.data.presupuestos || []);
-
-      const contRes = await axios.get(`${API_URL}/api/contabilidad/hoy`);
-      setContabilidad(contRes.data.resumen_diario || {});
-
-      const invRes = await axios.get(`${API_URL}/api/inventario`);
-      setInventario(invRes.data.items || []);
-      
-      const alertasCalc = (invRes.data.items || []).filter(item => 
-        item.stock <= item.minimo
-      ).map(item => ({
-        producto: item.producto,
-        stock: item.stock,
-        minimo: item.minimo
-      }));
-      setAlertas(alertasCalc);
-
-      setLoadingData(false);
-    } catch (error) {
-      console.error('Error:', error);
-      setSystemStatus('OFFLINE');
-      setLoadingData(false);
-    }
-  };
-
-  const createCustomAgent = () => {
-    if (!newAgent.name.trim()) return;
-
-    const agent = {
-      id: `custom-${Date.now()}`,
-      ...newAgent,
-      created: new Date().toLocaleTimeString()
     };
-
-    const updatedAgents = [...customAgents, agent];
-    setCustomAgents(updatedAgents);
-    localStorage.setItem('tranzshock-custom-agents', JSON.stringify(updatedAgents));
-    
-    setShowAgentForm(false);
-    setNewAgent({
-      name: '',
-      role: 'CUSTOM AGENT',
-      color: '#7fff7f',
-      icon: 'user',
-      task: 'Esperando asignación',
-      progress: 0
-    });
-  };
-
-  const updateAgentProgress = (agentId, newProgress) => {
-    const updatedAgents = customAgents.map(agent => 
-      agent.id === agentId ? { ...agent, progress: newProgress } : agent
-    );
-    setCustomAgents(updatedAgents);
-    localStorage.setItem('tranzshock-custom-agents', JSON.stringify(updatedAgents));
-  };
-
-  const iconOptions = {
-    user: <User size={20} />,
-    star: <Star size={20} />,
-    zap: <Zap size={20} />,
-    shield: <Shield size={20} />,
-    target: <Target size={20} />
-  };
-
-  const getIcon = (iconName) => iconOptions[iconName] || <User size={20} />;
-
-  const agentIcons = {
-    'manager agent': <Activity size={20} />,
-    'systems analyst': <Cpu size={20} />,
-    'designer agent': <HardDrive size={20} />,
-    'programmer agent': <Code size={20} />
-  };
-
-  const getRoleColor = (role) => {
-    switch(role?.toLowerCase()) {
-      case 'manager agent': return '#ff5f5f';
-      case 'systems analyst': return '#5ff0ff';
-      case 'designer agent': return '#aaff5f';
-      case 'programmer agent': return '#ffd55f';
-      default: return '#7fff7f';
-    }
-  };
+  }, []);
 
   return (
     <div className="tranzshock-container">
       <div className="header">
         <div className="title">
-          <span className="glitch">TRANZ SHOCK</span> OS v2.0
+          <span className="glitch">TRANZ SHOCK</span> OS v3.0
         </div>
         <div className="status-container">
-          <Wifi className="icon-green" size={18} />
-          <span className={`status-value ${systemStatus === 'ACTIVE' ? 'active' : 'offline'}`}>
-            {systemStatus}
-          </span>
-          <Battery className="icon-green" size={18} />
-          <span>100%</span>
+          <span className="status-value active">MAPA ACTIVO</span>
         </div>
       </div>
-
-      <div className="section-title">
-        <span>🤖 AGENTES DEL SISTEMA</span>
-      </div>
-      <div className="agents-grid">
-        {Object.entries(systemAgents).map(([key, agent]) => (
-          <div key={key} className="agent-card" style={{ borderColor: getRoleColor(agent.role) }}>
-            <div className="agent-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {agentIcons[agent.role?.toLowerCase()]}
-                <span className="agent-role" style={{ color: getRoleColor(agent.role) }}>
-                  {agent.role}
-                </span>
-              </div>
-              <span className="agent-id">ID:{String(agent.id).padStart(2, '0')}</span>
-            </div>
-            <div className="agent-display">
-              <div className="agent-field">
-                <span className="field-label">TAREA</span>
-                <span className="field-value">{agent.current_task}</span>
-              </div>
-              <div className="agent-field">
-                <span className="field-label">PROGRESO</span>
-                <div className="progress-bar-container">
-                  <div className="progress-bar-fill" style={{ width: `${agent.progress}%`, backgroundColor: getRoleColor(agent.role) }}></div>
-                  <span className="progress-text">{agent.progress}%</span>
-                </div>
-              </div>
-              <div className="agent-field">
-                <span className="field-label">FEEDBACK</span>
-                <span className="field-value feedback">{agent.last_feedback}</span>
-              </div>
-              <div className="agent-field">
-                <span className="field-label">ULT. UPDATE</span>
-                <span className="field-value timestamp">{agent.last_update}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="section-title" style={{ marginTop: '30px' }}>
-        <span>👥 AGENTES DEL EQUIPO</span>
-        <button className="add-agent-btn" onClick={() => setShowAgentForm(!showAgentForm)}>
-          <PlusCircle size={18} /> {showAgentForm ? 'CANCELAR' : 'CREAR AVATAR'}
-        </button>
-      </div>
-
-      {showAgentForm && (
-        <div className="agent-form">
-          <h3>CREAR NUEVO AGENTE</h3>
-          <div className="form-grid">
-            <div className="form-field">
-              <label>NOMBRE</label>
-              <input 
-                type="text" 
-                value={newAgent.name}
-                onChange={(e) => setNewAgent({...newAgent, name: e.target.value})}
-                placeholder="Ej: Juan Técnico"
-              />
-            </div>
-            <div className="form-field">
-              <label>COLOR</label>
-              <input 
-                type="color" 
-                value={newAgent.color}
-                onChange={(e) => setNewAgent({...newAgent, color: e.target.value})}
-              />
-            </div>
-            <div className="form-field">
-              <label>ICONO</label>
-              <select 
-                value={newAgent.icon}
-                onChange={(e) => setNewAgent({...newAgent, icon: e.target.value})}
-              >
-                <option value="user">👤 Usuario</option>
-                <option value="star">⭐ Estrella</option>
-                <option value="zap">⚡ Relámpago</option>
-                <option value="shield">🛡️ Escudo</option>
-                <option value="target">🎯 Objetivo</option>
-              </select>
-            </div>
-            <div className="form-field">
-              <label>ROL</label>
-              <input 
-                type="text" 
-                value={newAgent.role}
-                onChange={(e) => setNewAgent({...newAgent, role: e.target.value})}
-                placeholder="Ej: TÉCNICO SR"
-              />
-            </div>
-          </div>
-          <button className="save-agent-btn" onClick={createCustomAgent}>
-            <Save size={18} /> GUARDAR AGENTE
-          </button>
-        </div>
-      )}
-
-      <div className="agents-grid">
-        {customAgents.map((agent) => (
-          <div key={agent.id} className="agent-card custom" style={{ borderColor: agent.color }}>
-            <div className="agent-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {getIcon(agent.icon)}
-                <span className="agent-role" style={{ color: agent.color }}>
-                  {agent.role}
-                </span>
-              </div>
-              <span className="agent-id custom-badge">👤</span>
-            </div>
-            <div className="agent-display">
-              <div className="agent-field">
-                <span className="field-label">NOMBRE</span>
-                <span className="field-value">{agent.name}</span>
-              </div>
-              <div className="agent-field">
-                <span className="field-label">TAREA ACTUAL</span>
-                <span className="field-value">{agent.task}</span>
-              </div>
-              <div className="agent-field">
-                <span className="field-label">PROGRESO</span>
-                <div className="progress-bar-container">
-                  <div 
-                    className="progress-bar-fill" 
-                    style={{ width: `${agent.progress}%`, backgroundColor: agent.color }}
-                  ></div>
-                  <input 
-                    type="range" 
-                    min="0" 
-                    max="100" 
-                    value={agent.progress}
-                    onChange={(e) => updateAgentProgress(agent.id, parseInt(e.target.value))}
-                    className="progress-slider"
-                  />
-                  <span className="progress-text">{agent.progress}%</span>
-                </div>
-              </div>
-              <div className="agent-field">
-                <span className="field-label">CREADO</span>
-                <span className="field-value timestamp">{agent.created}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="sheets-panel">
-        <div className="panel-header">
-          <span>📊 GOOGLE SHEETS // LIVE DATA</span>
-          <span className="timestamp">ACT: {new Date().toLocaleTimeString()}</span>
-        </div>
-        {loadingData ? (
-          <div className="loading-message">🔄 CARGANDO DATOS DESDE GOOGLE SHEETS...</div>
-        ) : (
-          <div className="sheets-grid">
-            <div className="sheet-column">
-              <h3><DollarSign size={18} /> CONTABILIDAD HOY</h3>
-              <div className="data-box">
-                <div className="data-row"><span>INGRESOS:</span><span className="value-green">${contabilidad?.ingresos || 0}</span></div>
-                <div className="data-row"><span>EGRESOS:</span><span className="value-red">${contabilidad?.egresos || 0}</span></div>
-                <div className="data-row total"><span>BALANCE:</span><span className={(contabilidad?.balance || 0) >= 0 ? 'value-green' : 'value-red'}>${contabilidad?.balance || 0}</span></div>
-              </div>
-              <h3 style={{ marginTop: '20px' }}><Clipboard size={18} /> PRESUPUESTOS</h3>
-              <div className="presupuestos-list">
-                {presupuestos.length > 0 ? presupuestos.slice(0,5).map((p,i) => (
-                  <div key={i} className="presupuesto-item">
-                    <div className="presupuesto-header"><span>{p.cliente}</span><span className="value-green">${p.monto}</span></div>
-                    <div className="presupuesto-detail">{p.equipo} - {p.problema?.substring(0,20)}...</div>
-                  </div>
-                )) : <div className="empty-message">No hay presupuestos pendientes</div>}
-              </div>
-            </div>
-            <div className="sheet-column">
-              <h3><Package size={18} /> INVENTARIO // ALERTAS</h3>
-              {alertas.length > 0 ? alertas.map((a,i) => (
-                <div key={i} className="alerta-item">
-                  <AlertTriangle color="#ff7f7f" size={18} />
-                  <div><div className="alerta-producto">{a.producto}</div><div className="alerta-stock">Stock: {a.stock} | Mínimo: {a.minimo}</div></div>
-                </div>
-              )) : <div className="empty-message">✓ Stock normal</div>}
-              <div className="inventario-mini">
-                {inventario.slice(0,3).map((item,i) => (
-                  <div key={i} className="inventario-item">
-                    <span>{item.producto}</span>
-                    <span className={item.stock <= item.minimo ? 'value-red' : 'value-green'}>{item.stock} uds</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="sheet-column">
-              <h3><Cpu size={18} /> DIAGNÓSTICO IA</h3>
-              <input type="text" placeholder="Ej: No carga, pantalla rota..." className="diagnosis-input" />
-              <button className="cyber-button">DIAGNOSTICAR</button>
-            </div>
-          </div>
-        )}
-      </div>
-
+      
+      <div 
+        ref={gameContainerRef} 
+        className="game-container"
+        style={{
+          border: '2px solid #3a5f3a',
+          margin: '20px 0',
+          boxShadow: '0 0 20px rgba(0, 255, 0, 0.2)'
+        }}
+      />
+      
       <div className="system-log">
-        <div className="log-entry">[14/02-APIDALL(OA)]</div>
-        <div className="log-entry">[14/05-DIGIT PROGRAMMINGBUILDGROUD]</div>
-        <div className="log-entry">[CONECTADO A GOOGLE SHEETS // LIVE]</div>
-        <div className="log-entry">[AGENTES IA: {Object.keys(systemAgents).length + customAgents.length} ONLINE]</div>
+        <div className="log-entry">[MAPA: 25x18]</div>
+        <div className="log-entry">[AGENTES: 2 ACTIVOS]</div>
+        <div className="log-entry">[CLICK PARA MOVER MANAGER]</div>
+        <div className="log-entry">[ESPACIO: MOVER ALEATORIO]</div>
       </div>
     </div>
   );
 }
 
 export default App;
+
 
