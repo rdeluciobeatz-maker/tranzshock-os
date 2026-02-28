@@ -7,53 +7,131 @@ export class MainScene extends Phaser.Scene {
     super({ key: 'MainScene' });
     this.agents = [];
     this.cursors = null;
-    console.log("🏗️ [MainScene] Constructor con agentes");
+    this.zones = [];
+    console.log("🏗️ [MainScene] Constructor con escenario completo");
   }
 
   create() {
-    console.log("✨ [MainScene] create() - Creando mapa completo");
+    console.log("✨ [MainScene] create() - Creando escenario completo");
     
-    // 1. Fondo y grid
+    // 1. Dibujar el piso base
+    this.drawFloor();
+    
+    // 2. Dibujar zonas especiales
+    this.drawZones();
+    
+    // 3. Dibujar la cuadrícula (opcional, para referencia)
     this.drawGrid();
     
-    // 2. Crear agentes del sistema
-    this.createAgent('agent1', 5, 5, gameConfig.colors.agent1, 'MANAGER');
-    this.createAgent('agent2', 10, 8, gameConfig.colors.agent2, 'ANALYST');
+    // 4. Crear agentes en sus estaciones
+    this.createAgents();
     
-    // 3. Input de teclado
+    // 5. Input de teclado
     this.cursors = this.input.keyboard.createCursorKeys();
     
-    // 4. Evento de clic
+    // 6. Evento de clic para mover agentes
     this.input.on('pointerdown', (pointer) => {
       const tileX = Math.floor(pointer.x / gameConfig.tileSize);
       const tileY = Math.floor(pointer.y / gameConfig.tileSize);
       console.log(`🖱️ Click en tile [${tileX}, ${tileY}]`);
       
+      // Mover el primer agente al hacer clic
       if (this.agents.length > 0) {
         this.agents[0].moveTo(tileX, tileY);
       }
     });
     
-    console.log(`✅ [MainScene] ${this.agents.length} agentes creados`);
+    console.log(`✅ [MainScene] Escenario completo con ${this.agents.length} agentes`);
   }
 
-  drawGrid() {
-    // Piso
+  drawFloor() {
+    // Piso base (toda el área)
     this.add.rectangle(0, 0, 
       gameConfig.width, gameConfig.height, 
       gameConfig.colors.floor
     ).setOrigin(0);
-    
-    // Líneas de la cuadrícula
+  }
+
+  drawZones() {
     const graphics = this.add.graphics();
-    graphics.lineStyle(1, 0x3a5f3a, 0.8);
     
+    // Zona 1: Estaciones de trabajo (izquierda)
+    graphics.fillStyle(gameConfig.colors.workstation, 0.3);
+    graphics.fillRect(2 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
+                      8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
+    
+    // Zona 2: Sala de servidores (centro)
+    graphics.fillStyle(gameConfig.colors.server, 0.3);
+    graphics.fillRect(12 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
+                      8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
+    
+    // Zona 3: Área de reuniones (derecha)
+    graphics.fillStyle(gameConfig.colors.meeting, 0.3);
+    graphics.fillRect(22 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
+                      8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
+    
+    // Zona 4: Área de reparaciones (abajo)
+    graphics.fillStyle(gameConfig.colors.repair, 0.3);
+    graphics.fillRect(2 * gameConfig.tileSize, 12 * gameConfig.tileSize, 
+                      28 * gameConfig.tileSize, 6 * gameConfig.tileSize);
+    
+    // Dibujar bordes de las zonas
+    graphics.lineStyle(2, 0x7fff7f, 0.8);
+    
+    // Estaciones de trabajo
+    graphics.strokeRect(2 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
+                        8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
+    
+    // Sala de servidores
+    graphics.strokeRect(12 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
+                        8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
+    
+    // Área de reuniones
+    graphics.strokeRect(22 * gameConfig.tileSize, 2 * gameConfig.tileSize, 
+                        8 * gameConfig.tileSize, 6 * gameConfig.tileSize);
+    
+    // Área de reparaciones
+    graphics.strokeRect(2 * gameConfig.tileSize, 12 * gameConfig.tileSize, 
+                        28 * gameConfig.tileSize, 6 * gameConfig.tileSize);
+    
+    // Añadir textos de zona
+    this.add.text(3 * gameConfig.tileSize, 3 * gameConfig.tileSize, 'ESTACIONES', {
+      fontFamily: 'Share Tech Mono',
+      fontSize: '16px',
+      color: '#7fff7f'
+    });
+    
+    this.add.text(13 * gameConfig.tileSize, 3 * gameConfig.tileSize, 'SERVIDORES', {
+      fontFamily: 'Share Tech Mono',
+      fontSize: '16px',
+      color: '#7fff7f'
+    });
+    
+    this.add.text(23 * gameConfig.tileSize, 3 * gameConfig.tileSize, 'REUNIONES', {
+      fontFamily: 'Share Tech Mono',
+      fontSize: '16px',
+      color: '#7fff7f'
+    });
+    
+    this.add.text(3 * gameConfig.tileSize, 13 * gameConfig.tileSize, 'REPARACIONES', {
+      fontFamily: 'Share Tech Mono',
+      fontSize: '16px',
+      color: '#7fff7f'
+    });
+  }
+
+  drawGrid() {
+    const graphics = this.add.graphics();
+    graphics.lineStyle(1, 0x3a5f3a, 0.3);
+    
+    // Líneas verticales
     for (let i = 0; i <= gameConfig.mapWidth; i++) {
       const x = i * gameConfig.tileSize;
       graphics.moveTo(x, 0);
       graphics.lineTo(x, gameConfig.height);
     }
     
+    // Líneas horizontales
     for (let i = 0; i <= gameConfig.mapHeight; i++) {
       const y = i * gameConfig.tileSize;
       graphics.moveTo(0, y);
@@ -61,6 +139,20 @@ export class MainScene extends Phaser.Scene {
     }
     
     graphics.strokePath();
+  }
+
+  createAgents() {
+    // Agente 1 (Manager) en estaciones
+    this.createAgent('agent1', 5, 5, gameConfig.colors.agent1, 'MANAGER');
+    
+    // Agente 2 (Analyst) en servidores
+    this.createAgent('agent2', 15, 5, gameConfig.colors.agent2, 'ANALYST');
+    
+    // Agente 3 (Designer) en reuniones
+    this.createAgent('agent3', 25, 5, gameConfig.colors.agent3, 'DESIGNER');
+    
+    // Agente 4 (Programmer) en reparaciones
+    this.createAgent('agent4', 10, 15, gameConfig.colors.agent4, 'PROGRAMMER');
   }
 
   createAgent(id, x, y, color, name) {
@@ -72,12 +164,15 @@ export class MainScene extends Phaser.Scene {
   update(time, delta) {
     this.agents.forEach(agent => agent.update(delta / 1000));
     
-    if (this.cursors && Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
-      if (this.agents.length > 0) {
-        const randomX = Math.floor(Math.random() * gameConfig.mapWidth);
-        const randomY = Math.floor(Math.random() * gameConfig.mapHeight);
-        console.log(`🎲 Espacio: moviendo a [${randomX}, ${randomY}]`);
-        this.agents[0].moveTo(randomX, randomY);
+    // Movimiento con teclado para probar
+    if (this.cursors) {
+      if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
+        // Mover agente aleatoriamente por el mapa
+        if (this.agents.length > 0) {
+          const randomX = Math.floor(Math.random() * gameConfig.mapWidth);
+          const randomY = Math.floor(Math.random() * gameConfig.mapHeight);
+          this.agents[0].moveTo(randomX, randomY);
+        }
       }
     }
   }
