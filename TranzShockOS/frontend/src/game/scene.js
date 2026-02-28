@@ -3,52 +3,54 @@ import { gameConfig } from './config';
 
 export class MainScene extends Phaser.Scene {
   constructor() {
+    // La clave de la escena debe coincidir con la que usamos en main.js
     super({ key: 'MainScene' });
-    console.log("🏗️ CONSTRUCTOR DE MainScene EJECUTADO");
+    console.log("🏗️ [MainScene] CONSTRUCTOR EJECUTADO");
   }
 
   init() {
-    console.log("📋 init() de MainScene ejecutado");
+    console.log("📋 [MainScene] init() EJECUTADO");
   }
 
   preload() {
-    console.log("📦 preload() de MainScene ejecutado (sin assets)");
+    console.log("📦 [MainScene] preload() EJECUTADO");
   }
 
   create() {
-    console.log("✨ create() de MainScene EJECUTADO - ESCENA ACTIVA");
+    console.log("✨ [MainScene] create() EJECUTADO - ESCENA ACTIVA");
 
-    // Fondo verde oscuro
-    this.add.rectangle(0, 0, gameConfig.width, gameConfig.height, 0x1a3a1a).setOrigin(0);
+    // Fondo verde sólido
+    this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x1a3a1a).setOrigin(0);
 
     // Texto grande de confirmación
-    const texto = this.add.text(400, 300, '✅ MAPA ACTIVO', {
+    const texto = this.add.text(this.scale.width/2, this.scale.height/2, '✅ MAPA ACTIVO', {
       fontFamily: 'Share Tech Mono',
       fontSize: '48px',
       color: '#7fff7f',
       stroke: '#0f3f0f',
-      strokeThickness: 6
+      strokeThickness: 6,
+      align: 'center'
     }).setOrigin(0.5);
 
-    // Hacemos que el texto parpadee para ver que la escena se actualiza
+    // Animación simple para ver que la escena se actualiza
     this.tweens.add({
       targets: texto,
-      alpha: 0.3,
+      alpha: 0.2,
       duration: 800,
       yoyo: true,
       repeat: -1
     });
 
-    // Dibujar un grid simple para referencia
+    // Dibujar un recuadro para dar contexto
     const graphics = this.add.graphics();
-    graphics.lineStyle(2, 0x3a6f3a, 0.8);
-    graphics.strokeRect(50, 50, 700, 500);
+    graphics.lineStyle(4, 0x3f9f3f, 1);
+    graphics.strokeRect(50, 50, this.scale.width-100, this.scale.height-100);
 
-    console.log("✅ create() completado - Elementos visuales añadidos.");
+    console.log("✅ [MainScene] create() completado. Elementos visuales añadidos.");
   }
 
   update() {
-    // Vacío por ahora, pero podemos poner un log ocasional
-    // console.log("🔄 update() en ejecución");
+    // Podemos poner un log muy espaciado para verificar que update corre
+    // if (Math.random() < 0.01) console.log("🔄 [MainScene] update()");
   }
 }
