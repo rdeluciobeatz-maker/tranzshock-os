@@ -580,4 +580,24 @@ body::after {
     height: auto;
     aspect-ratio: 800/600;
   }
+
+/* ===== NUEVO: FORZAR VISIBILIDAD DEL CANVAS ===== */
+.game-container canvas {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background-color: #0f130f;
+  border: 1px solid #ff0000; /* Borde rojo temporal para ver dónde está */
+}
+
+/* Para depurar, podemos ver los límites del contenedor */
+.game-container {
+  border: 3px solid #00ff00 !important; /* Borde verde brillante temporal */
+  background-color: #1a1f1a;
+  min-height: 600px;
+  position: relative;
+  z-index: 10;
+}
 }
